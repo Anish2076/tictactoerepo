@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tic Tac Toe</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      padding: 0;
+      margin: 0;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-image: url('image.jpg.png'); /* Replace with your actual file name */
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      min-height: 100vh;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      text-align: center;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 30px;
+      border-radius: 15px;
+      max-width: 400px;
+      width: 90%;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      font-size: 2.5rem;
+      text-shadow: 2px 2px 4px #000;
+    }
+
+    #modeSelect button,
+    #restart {
+      background-color: rgba(255, 255, 255, 0.85);
+      border: none;
+      border-radius: 8px;
+      padding: 12px 20px;
+      margin: 10px 5px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #333;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    #modeSelect button:hover,
+    #restart:hover {
+      background-color: rgba(255, 255, 255, 1);
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 20px auto;
+    }
+
+    .cell {
+      width: 100px;
+      height: 100px;
+      background-color: rgba(255, 255, 255, 0.9);
+      font-size: 2.5rem;
+      color: #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .cell:hover {
+      background-color: rgba(255, 255, 255, 1);
+    }
+
+    #status {
+      font-size: 1.2rem;
+      margin: 10px 0 20px;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+    }
+
+    @media (max-width: 500px) {
+      .cell {
+        width: 70px;
+        height: 70px;
+        font-size: 2rem;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      #modeSelect button,
+      #restart {
+        font-size: 0.9rem;
+        padding: 10px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Tic Tac Toe</h1>
+    <div id="modeSelect">
+      <button onclick="startGame('pvp')">Player vs Player</button>
+      <button onclick="startGame('pvc')">Player vs Computer</button>
+    </div>
+    <div class="board" id="board"></div>
+    <div id="status"></div>
+    <button id="restart" onclick="restartGame()">Restart</button>
+  </div>
+
+  <script>
+    const boardElement = document.getElementById("board");
+    const statusElement = document.getElementById("status");
+    const restartButton = document.getElementById("restart");
+    const modeSelect = document.getElementById("modeSelect");
+
+    let board = ["", "", "", "", "", "", "", "", ""];
+    let currentPlayer = "X";
+    let gameActive = false;
+    let mode = "pvp";
+
+    const winCombos = [
+      [0,1,2], [3,4,5], [6,7,8],
+      [0,3,6], [1,4,7], [2,5,8],
+      [0,4,8], [2,4,6]
+    ];
+
+    function startGame(selectedMode) {
+      mode = selectedMode;
+      board = ["", "", "", "", "", "", "", "", ""];
+      currentPlayer = "X";
+      gameActive = true;
+      boardElement.innerHTML = "";
+      statusElement.textContent = "Player X's turn";
+      restartButton.style.display = "inline-block";
+      modeSelect.style.display = "none";
+
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement("div");
+        cell.classList.add("cell");
+        cell.dataset.index = i;
+        cell.addEventListener("click", handleClick);
+        boardElement.appendChild(cell);
+      }
+    }
+
+    function handleClick(e) {
+      const index = e.target.dataset.index;
+      if (!gameActive || board[index] !== "") return;
+
+      makeMove(index, currentPlayer);
+
+      if (checkWinner(currentPlayer)) {
+        statusElement.textContent = `Player ${currentPlayer} wins!`;
+        gameActive = false;
+        return;
+      }
+
+      if (board.every(cell => cell !== "")) {
+        statusElement.textContent = "It's a draw!";
+        gameActive = false;
+        return;
+      }
+
+      currentPlayer = currentPlayer === "X" ? "O" : "X";
+      statusElement.textContent = `Player ${currentPlayer}'s turn`;
+
+      if (mode === "pvc" && currentPlayer === "O") {
+        setTimeout(computerMove, 400);
+      }
+    }
+
+    function makeMove(index, player) {
+      board[index] = player;
+      const cell = boardElement.querySelector(`[data-index="${index}"]`);
+      cell.textContent = player;
+    }
+
+    function computerMove() {
+      const emptyCells = board.map((v, i) => v === "" ? i : null).filter(i => i !== null);
+      const move = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+      makeMove(move, "O");
+
+      if (checkWinner("O")) {
+        statusElement.textContent = "Computer wins!";
+        gameActive = false;
+        return;
+      }
+
+      if (board.every(cell => cell !== "")) {
+        statusElement.textContent = "It's a draw!";
+        gameActive = false;
+        return;
+      }
+
+      currentPlayer = "X";
+      statusElement.textContent = "Player X's turn";
+    }
+
+    function checkWinner(player) {
+      return winCombos.some(combo => combo.every(index => board[index] === player));
+    }
+
+    function restartGame() {
+      modeSelect.style.display = "block";
+      restartButton.style.display = "none";
+      boardElement.innerHTML = "";
+      statusElement.textContent = "";
+      gameActive = false;
+    }
+  </script>
+</body>
+</html>
